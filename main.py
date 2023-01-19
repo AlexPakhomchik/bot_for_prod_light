@@ -1,7 +1,12 @@
+import json
+
+import requests
 import telebot
 from dotenv import load_dotenv
 import os
-import requests
+
+from get_material import *
+
 load_dotenv()
 
 
@@ -55,10 +60,25 @@ def handle_text(message):
                 'Menu: \n1. Профиль \n2. Светодиодные модули 2 \n3. Драйвера \n4. Крышки \n5. Система крепления',
                 reply_markup=markup)
     elif message.text == 'Профиль':
-        url = 'http://127.0.0.1:9000/profile/'
-        response = requests.get(url)
-        response_json = response.json()
-        bot.send_message(message.chat.id, str(response_json))
+        response = requests.get('http://127.0.0.1:9000/profile/')
+        data = response.json()
+        bot.send_message(message.chat.id, get_all_profile(data))
+    elif message.text == 'Светодиодные модули':
+        response = requests.get('http://127.0.0.1:9000/module/')
+        data = response.json()
+        bot.send_message(message.chat.id, get_all_module(data))
+    elif message.text == 'Драйвера':
+        response = requests.get('http://127.0.0.1:9000/driver/')
+        data = response.json()
+        bot.send_message(message.chat.id, get_all_drivers(data))
+    elif message.text == 'Крышки':
+        response = requests.get('http://127.0.0.1:9000/cover/')
+        data = response.json()
+        bot.send_message(message.chat.id, get_all_covers(data))
+    elif message.text == 'Система крепления':
+        response = requests.get('http://127.0.0.1:9000/mounting_system/')
+        data = response.json()
+        bot.send_message(message.chat.id, get_all_mounting_system(data))
 
 
 bot.polling()
