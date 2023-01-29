@@ -1,5 +1,7 @@
 import requests
 
+MATERIALS = {'Профиль': 'profile', 'Светодиодные модули': 'module', 'Драйвера': 'driver', 'Крышки': 'cover',
+             'Система крепления': 'mounting_system'}
 
 def get_number_of_materials(material):
     response = requests.get(f'http://127.0.0.1:9000/api/{material}/')
