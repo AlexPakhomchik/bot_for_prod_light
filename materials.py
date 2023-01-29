@@ -3,6 +3,9 @@ import requests
 MATERIALS = {'Профиль': 'profile', 'Светодиодные модули': 'module', 'Драйвера': 'driver', 'Крышки': 'cover',
              'Система крепления': 'mounting_system'}
 
+ADD_MATERIALS = {'Добавить профиль': 'profile', 'Добавить светодиодные модули': 'module', 'Добавить драйвера': 'driver',
+                 'Добавить крышки': 'cover', 'Добавить систему крепления': 'mounting_system'}
+
 DEL_MATERIALS = {'Списать профиль': 'profile', 'Списать светодиодные модули': 'module', 'Списать драйвера': 'driver',
                  'Списать крышки': 'cover', 'Списать систему крепления': 'mounting_system'}
 

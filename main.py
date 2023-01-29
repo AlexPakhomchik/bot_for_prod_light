@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 from telebot import types
 from get_material import *
-from materials import get_number_of_materials, MATERIALS, DEL_MATERIALS
+from materials import get_number_of_materials, MATERIALS, DEL_MATERIALS, ADD_MATERIALS
 
 load_dotenv()
 
@@ -62,33 +62,17 @@ def handle_text(message):
         button_6 = types.KeyboardButton('Назад в меню')
         markup.add(button_1, button_2, button_3, button_4, button_5, button_6)
         bot.send_message(message.chat.id,
-                         "Menu: \n1. Профиль 1 \n2. Светодиодные модули \n3. Драйвера \n4. Крышки \n5. Крепления",
+                         "Menu: \n1. Профиль \n2. Светодиодные модули \n3. Драйвера \n4. Крышки \n5. Крепления",
                          reply_markup=markup)
-    elif message.text == 'Добавить профиль':
-        chapter = 'profile'
-        bot.send_message(message.chat.id, "Пожалуйста, введите наименование профиля и количество, которое хотите"
-                                          " добавить")
+    elif message.text in list(ADD_MATERIALS.keys()):
+        chapter = ADD_MATERIALS[message.text]
+        response = requests.get(f'http://127.0.0.1:9000/api/{ADD_MATERIALS[message.text]}/')
+        data = response.json()
+        bot.send_message(message.chat.id, "Пожалуйста, введите "
+                                        "наименование и количество, которое хотите добавить")
+        bot.send_message(message.chat.id, get_all_materials(data, ADD_MATERIALS[message.text]))
         bot.register_next_step_handler(message, add_materials, chapter)
-    elif message.text == 'Добавить светодиодные модули':
-        chapter = 'module'
-        bot.send_message(message.chat.id, "Пожалуйста, введите наименование светодиодных модулей и количество, "
-                                          "которое хотите добавить")
-        bot.register_next_step_handler(message, add_materials, chapter)
-    elif message.text == 'Добавить драйвера':
-        chapter = 'driver'
-        bot.send_message(message.chat.id, "Пожалуйста, введите наименование драйвера и количество, которое хотите"
-                                          " добавить")
-        bot.register_next_step_handler(message, add_materials, chapter)
-    elif message.text == 'Добавить крышки':
-        chapter = 'cover'
-        bot.send_message(message.chat.id, "Пожалуйста, введите наименование крышек и количество, которое хотите"
-                                          " добавить")
-        bot.register_next_step_handler(message, add_materials, chapter)
-    elif message.text == 'Добавить систему крепления':
-        chapter = 'mounting_system'
-        bot.send_message(message.chat.id, "Пожалуйста, введите наименование системы крепления и количество, "
-                                          "которое хотите добавить")
-        bot.register_next_step_handler(message, add_materials, chapter)
+
 
     if message.text == 'Списать материал':
         markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
@@ -104,8 +88,11 @@ def handle_text(message):
                          reply_markup=markup)
     elif message.text in list(DEL_MATERIALS.keys()):
         chapter = DEL_MATERIALS[message.text]
+        response = requests.get(f'http://127.0.0.1:9000/api/{DEL_MATERIALS[message.text]}/')
+        data = response.json()
         bot.send_message(message.chat.id, "Пожалуйста, введите наименование и количество, которое хотите"
                                           " списать")
+        bot.send_message(message.chat.id, get_all_materials(data, DEL_MATERIALS[message.text]))
         bot.register_next_step_handler(message, del_materials, chapter)
 
 
