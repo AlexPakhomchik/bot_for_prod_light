@@ -26,11 +26,11 @@ def handle_menu_button(message):
     start_message(message)
 
 
-def process(message):
-    number_profile = get_number_of_materials('profile')
+def process(message, chapter):
+    number_profile = get_number_of_materials(chapter)
     data = message.text.split()
-    new_dict = {'profile': data[0], 'value': data[1]}
-    url = f'http://127.0.0.1:9000/api/profile/{number_profile.get(data[0])}/'
+    new_dict = {chapter: data[0], 'value': data[1]}
+    url = f'http://127.0.0.1:9000/api/{chapter}/{number_profile.get(data[0])}/'
     previous_value_request = requests.get(url)
     last_value_json = previous_value_request.json()
     last_value = last_value_json['value']
@@ -53,9 +53,30 @@ def handle_text(message):
                          "Menu: \n1. Профиль 1 \n2. Светодиодные модули \n3. Драйвера \n4. Крышки \n5. Крепления",
                          reply_markup=markup)
     elif message.text == 'Добавить профиль':
+        chapter = 'profile'
         bot.send_message(message.chat.id, "Пожалуйста, введите наименование профиля и количество, которое хотите"
                                           " добавить")
-        bot.register_next_step_handler(message, process)
+        bot.register_next_step_handler(message, process, chapter)
+    elif message.text == 'Добавить светодиодные модули':
+        chapter = 'module'
+        bot.send_message(message.chat.id, "Пожалуйста, введите наименование светодиодных модулей и количество, "
+                                          "которое хотите добавить")
+        bot.register_next_step_handler(message, process, chapter)
+    elif message.text == 'Добавить драйвера':
+        chapter = 'driver'
+        bot.send_message(message.chat.id, "Пожалуйста, введите наименование драйвера и количество, которое хотите"
+                                          " добавить")
+        bot.register_next_step_handler(message, process, chapter)
+    elif message.text == 'Добавить крышки':
+        chapter = 'cover'
+        bot.send_message(message.chat.id, "Пожалуйста, введите наименование крышек и количество, которое хотите"
+                                          " добавить")
+        bot.register_next_step_handler(message, process, chapter)
+    elif message.text == 'Добавить систему крепления':
+        chapter = 'mounting_system'
+        bot.send_message(message.chat.id, "Пожалуйста, введите наименование системы крепления и количество, "
+                                          "которое хотите добавить")
+        bot.register_next_step_handler(message, process, chapter)
 
     if message.text == 'Списать материал':
         markup = telebot.types.ReplyKeyboardMarkup(row_width=1)

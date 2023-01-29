@@ -7,6 +7,6 @@ def get_number_of_materials(material):
     count = 1
     dict_of_material = {}
     for i in data:
-        dict_of_material[i['profile']] = count
+        dict_of_material[i[material]] = count
         count += 1
     return dict_of_material
