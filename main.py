@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from telebot import types
 from get_material import *
+from materials import get_number_of_materials
 
 load_dotenv()
 
@@ -26,7 +27,7 @@ def handle_menu_button(message):
 
 
 def process(message):
-    number_profile = {'LUMO': 1, 'LINE': 2, 'MARSHALL': 3, 'paulik': 4}
+    number_profile = get_number_of_materials('profile')
     data = message.text.split()
     new_dict = {'profile': data[0], 'value': data[1]}
     url = f'http://127.0.0.1:9000/api/profile/{number_profile.get(data[0])}/'
@@ -36,7 +37,6 @@ def process(message):
     new_dict['value'] = last_value + int(data[1])
     response = requests.put(url, data=new_dict)
     bot.send_message(message.chat.id, f"Материал добавлен")
-
 
 @bot.message_handler(content_types=['text'])
 def handle_text(message):
@@ -89,7 +89,6 @@ def handle_text(message):
     elif message.text == 'Профиль':
         response = requests.get('http://127.0.0.1:9000/api/profile/')
         data = response.json()
-        print(data)
         bot.send_message(message.chat.id, get_all_profile(data))
     elif message.text == 'Светодиодные модули':
         response = requests.get('http://127.0.0.1:9000/api/module/')
