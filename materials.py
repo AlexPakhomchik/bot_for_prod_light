@@ -3,6 +3,9 @@ import requests
 MATERIALS = {'Профиль': 'profile', 'Светодиодные модули': 'module', 'Драйвера': 'driver', 'Крышки': 'cover',
              'Система крепления': 'mounting_system'}
 
+DEL_MATERIALS = {'Списать профиль': 'profile', 'Списать светодиодные модули': 'module', 'Списать драйвера': 'driver',
+                 'Списать крышки': 'cover', 'Списать систему крепления': 'mounting_system'}
+
 def get_number_of_materials(material):
     response = requests.get(f'http://127.0.0.1:9000/api/{material}/')
     data = response.json()
