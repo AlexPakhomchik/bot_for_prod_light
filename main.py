@@ -14,6 +14,8 @@ bot = telebot.TeleBot(os.getenv('TOKEN_API'))
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
+    id_user = message.from_user.id
+    print(id_user)
     markup = telebot.types.ReplyKeyboardMarkup()
     markup.row(telebot.types.KeyboardButton('Добавить материал'))
     markup.row(telebot.types.KeyboardButton('Списать материал'))
@@ -34,9 +36,13 @@ def add_materials(message, chapter):
     previous_value_request = requests.get(url)
     last_value_json = previous_value_request.json()
     last_value = last_value_json['value']
-    new_dict['value'] = last_value + int(data[1])
+    try:
+        new_dict['value'] = last_value + int(data[1])
+    except:
+        bot.send_message(message.chat.id, f"Неправильное значение, необходимо ввести число")
+    else:
+        bot.send_message(message.chat.id, f"Материал добавлен")
     response = requests.put(url, data=new_dict)
-    bot.send_message(message.chat.id, f"Материал добавлен")
 
 def del_materials(message, chapter):
     number_materials = get_number_of_materials(chapter)
