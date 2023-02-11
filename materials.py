@@ -10,6 +10,13 @@ DEL_MATERIALS = {'Списать профиль': 'profile', 'Списать с�
                  'Списать крышки': 'cover', 'Списать систему крепления': 'mounting_system'}
 
 def get_number_of_materials(material):
+    """
+    This function takes one parameter as input:
+    - material (str): The name of the material for which to retrieve the count.
+
+    The function makes a GET request to an API endpoint to retrieve data for the specified material. The function returns a
+    dictionary mapping the names of the materials to their corresponding count.
+    """
     response = requests.get(f'http://127.0.0.1:9000/api/{material}/')
     data = response.json()
     count = 1

@@ -14,6 +14,12 @@ bot = telebot.TeleBot(os.getenv('TOKEN_API'))
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
+    """
+    This function serves as the starting point for the bot's interaction with the user. It displays a set of options for the user to choose from.
+
+    Parameters:
+    message (telebot.types.Message): A Message object that represents the incoming message from the user.
+    """
     id_user = message.from_user.id
     print(id_user)
     markup = telebot.types.ReplyKeyboardMarkup()
@@ -25,18 +31,39 @@ def start_message(message):
 
 @bot.message_handler(func=lambda message: message.text == 'Назад в меню')
 def handle_menu_button(message):
+    """
+    This function is used to return back to the main menu when the "Назад в меню" button is pressed.
+The main menu is displayed by calling the start_message function.
+    """
     start_message(message)
 
 
 def add_material_get_name_material(message, chapter):
+    """
+    This function takes two parameters as input:
+    - message (object): The message object received from the chat API.
+    - chapter (object): The chapter object associated with the material being added.
+
+    The function prompts the user for the name of the material to be added. Once the name is received, the function calls
+    the add_material_get_value_material function to prompt the user for the quantity of the material.
+    """
     data = message.text
     inp = bot.send_message(message.chat.id, 'Теперь количество')
     bot.register_next_step_handler(inp, add_material_get_value_material, data, chapter)
-    # url = f'http://127.0.0.1:9000/api/profile/{data}/'
-    # response = requests.put(url, data=data)
 
 
 def add_material_get_value_material(message, data, chapter):
+    """
+    This function takes three parameters as input:
+    - message (object): The message object received from the chat API.
+    - data (str): The name of the material to be added.
+    - chapter (object): The chapter object associated with the material being added.
+
+    The function retrieves the current number of materials for the specified chapter. It then makes a GET request to an API
+    endpoint to retrieve the current value of the material. The function adds the newly provided quantity to the current value
+    and updates the material count by making a PUT request to the API endpoint. Finally, the function sends a confirmation
+    message to the user indicating that the material has been added.
+    """
     number_materials = get_number_of_materials(chapter)
     url = f'http://127.0.0.1:9000/api/{chapter}/{number_materials.get(data)}/'
     previous_value_request = requests.get(url)
