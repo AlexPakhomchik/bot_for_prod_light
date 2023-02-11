@@ -75,17 +75,23 @@ def add_material_get_value_material(message, data, chapter):
     bot.send_message(message.chat.id, f"Материал добавлен")
 
 
-def del_materials(message, chapter):
+def del_material_get_name_material(message, chapter):
+    data = message.text.upper()
+    inp = bot.send_message(message.chat.id, 'Теперь количество')
+    bot.register_next_step_handler(inp, del_material_get_value_material, data, chapter)
+
+
+def del_material_get_value_material(message, data, chapter):
     number_materials = get_number_of_materials(chapter)
-    data = message.text.split()
-    new_dict = {chapter: data[0], 'value': data[1]}
-    url = f'http://127.0.0.1:9000/api/{chapter}/{number_materials.get(data[0])}/'
+    url = f'http://127.0.0.1:9000/api/{chapter}/{number_materials.get(data)}/'
     previous_value_request = requests.get(url)
     last_value_json = previous_value_request.json()
     last_value = last_value_json['value']
-    new_dict['value'] = last_value - int(data[1])
-    response = requests.put(url, data=new_dict)
+    end_data = {chapter: data, 'value': int(message.text)}
+    end_data['value'] = last_value - end_data['value']
+    response = requests.put(url, data=end_data)
     bot.send_message(message.chat.id, f"Материал списан")
+
 
 @bot.message_handler(content_types=['text'])
 def handle_text(message):
@@ -130,7 +136,7 @@ def handle_text(message):
         bot.send_message(message.chat.id, "Пожалуйста, введите наименование и количество, которое хотите"
                                           " списать")
         bot.send_message(message.chat.id, get_all_materials(data, DEL_MATERIALS[message.text]))
-        bot.register_next_step_handler(message, del_materials, chapter)
+        bot.register_next_step_handler(message, del_material_get_name_material, chapter)
 
 
 
@@ -152,9 +158,6 @@ def handle_text(message):
         data = response.json()
         bot.send_message(message.chat.id, get_all_materials(data, MATERIALS[message.text]))
 
-    if message.text == 'test':
-        inp = bot.send_message(message.chat.id, 'Введите наименование профиля')
-        bot.register_next_step_handler(inp, data_1)
 
 
 
