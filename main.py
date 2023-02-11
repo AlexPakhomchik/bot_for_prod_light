@@ -47,7 +47,7 @@ def add_material_get_name_material(message, chapter):
     The function prompts the user for the name of the material to be added. Once the name is received, the function calls
     the add_material_get_value_material function to prompt the user for the quantity of the material.
     """
-    data = message.text
+    data = message.text.upper()
     inp = bot.send_message(message.chat.id, 'Теперь количество')
     bot.register_next_step_handler(inp, add_material_get_value_material, data, chapter)
 
@@ -70,11 +70,9 @@ def add_material_get_value_material(message, data, chapter):
     last_value_json = previous_value_request.json()
     last_value = last_value_json['value']
     end_data = {chapter: data, 'value': int(message.text)}
-    print(end_data)
     end_data['value'] = last_value + end_data['value']
     response = requests.put(url, data=end_data)
     bot.send_message(message.chat.id, f"Материал добавлен")
-    print(end_data)
 
 
 def del_materials(message, chapter):
