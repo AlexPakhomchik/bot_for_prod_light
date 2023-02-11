@@ -28,21 +28,27 @@ def handle_menu_button(message):
     start_message(message)
 
 
-def add_materials(message, chapter):
+def add_material_get_name_material(message, chapter):
+    data = message.text
+    inp = bot.send_message(message.chat.id, 'Теперь количество')
+    bot.register_next_step_handler(inp, add_material_get_value_material, data, chapter)
+    # url = f'http://127.0.0.1:9000/api/profile/{data}/'
+    # response = requests.put(url, data=data)
+
+
+def add_material_get_value_material(message, data, chapter):
     number_materials = get_number_of_materials(chapter)
-    data = message.text.split()
-    new_dict = {chapter: data[0], 'value': data[1]}
-    url = f'http://127.0.0.1:9000/api/{chapter}/{number_materials.get(data[0])}/'
+    url = f'http://127.0.0.1:9000/api/{chapter}/{number_materials.get(data)}/'
     previous_value_request = requests.get(url)
     last_value_json = previous_value_request.json()
     last_value = last_value_json['value']
-    try:
-        new_dict['value'] = last_value + int(data[1])
-    except:
-        bot.send_message(message.chat.id, f"Неправильное значение, необходимо ввести число")
-    else:
-        bot.send_message(message.chat.id, f"Материал добавлен")
-    response = requests.put(url, data=new_dict)
+    end_data = {chapter: data, 'value': int(message.text)}
+    print(end_data)
+    end_data['value'] = last_value + end_data['value']
+    response = requests.put(url, data=end_data)
+    bot.send_message(message.chat.id, f"Материал добавлен")
+    print(end_data)
+
 
 def del_materials(message, chapter):
     number_materials = get_number_of_materials(chapter)
@@ -77,7 +83,7 @@ def handle_text(message):
         bot.send_message(message.chat.id, "Пожалуйста, введите "
                                         "наименование и количество, которое хотите добавить")
         bot.send_message(message.chat.id, get_all_materials(data, ADD_MATERIALS[message.text]))
-        bot.register_next_step_handler(message, add_materials, chapter)
+        bot.register_next_step_handler(message, add_material_get_name_material, chapter)
 
 
     if message.text == 'Списать материал':
@@ -120,6 +126,13 @@ def handle_text(message):
         response = requests.get(f'http://127.0.0.1:9000/api/{MATERIALS[message.text]}/')
         data = response.json()
         bot.send_message(message.chat.id, get_all_materials(data, MATERIALS[message.text]))
+
+    if message.text == 'test':
+        inp = bot.send_message(message.chat.id, 'Введите наименование профиля')
+        bot.register_next_step_handler(inp, data_1)
+
+
+
 
 
 bot.polling()
