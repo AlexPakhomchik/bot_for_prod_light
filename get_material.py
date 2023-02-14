@@ -14,3 +14,8 @@ def get_all_materials(json_data, name_material):
     return data_str
 
 
+def conversion_name(name):
+    step_1 = name.split(' ')
+    step_2 = list(filter(lambda x: x.strip(), step_1))
+    return '_'.join(step_2).upper()
+

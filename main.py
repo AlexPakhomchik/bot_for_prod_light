@@ -95,7 +95,7 @@ def handle_text(message):
         button_6 = types.KeyboardButton('Назад в меню')
         markup.add(button_1, button_2, button_3, button_4, button_5, button_6)
         bot.send_message(message.chat.id,
-                'Menu: \n1. Профиль \n2. Светодиодные модули 2 \n3. Драйвера \n4. Крышки \n5. Система крепления',
+                'Выбирайте категорию',
                 reply_markup=markup)
     elif message.text in list(MATERIALS.keys()):
         response = requests.get(f'http://127.0.0.1:9000/api/{MATERIALS[message.text]}/')

@@ -1,5 +1,6 @@
 import requests
 
+from get_material import conversion_name
 from main import bot
 
 MATERIALS = {'Профиль': 'profile', 'Светодиодные модули': 'module', 'Драйвера': 'driver', 'Крышки': 'cover',
@@ -41,7 +42,7 @@ def add_material_get_name_material(message, chapter, bot):
     The function prompts the user for the name of the material to be added. Once the name is received, the function calls
     the add_material_get_value_material function to prompt the user for the quantity of the material.
     """
-    data = message.text.upper()
+    data = conversion_name(message.text)
     inp = bot.send_message(message.chat.id, 'Теперь количество')
     bot.register_next_step_handler(inp, add_material_get_value_material, data, chapter)
 
@@ -58,7 +59,6 @@ def add_material_get_value_material(message, data, chapter):
     and updates the material count by making a PUT request to the API endpoint. Finally, the function sends a confirmation
     message to the user indicating that the material has been added.
     """
-    print("Adding")
     number_materials = get_number_of_materials(chapter)
     url = f'http://127.0.0.1:9000/api/{chapter}/{number_materials.get(data)}/'
     previous_value_request = requests.get(url)
@@ -71,7 +71,7 @@ def add_material_get_value_material(message, data, chapter):
 
 
 def del_material_get_name_material(message, chapter, bot):
-    data = message.text.upper()
+    data = conversion_name(message.text)
     inp = bot.send_message(message.chat.id, 'Теперь количество')
     bot.register_next_step_handler(inp, del_material_get_value_material, data, chapter)
 
@@ -89,7 +89,7 @@ def del_material_get_value_material(message, data, chapter):
 
 
 def create_material_get_name_material(message, chapter, bot):
-    data = message.text.upper()
+    data = conversion_name(message.text)
     inp = bot.send_message(message.chat.id, 'Теперь количество')
     bot.register_next_step_handler(inp, create_material_get_value_material, data, chapter)
 
