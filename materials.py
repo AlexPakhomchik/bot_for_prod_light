@@ -9,6 +9,9 @@ ADD_MATERIALS = {'Добавить профиль': 'profile', 'Добавить
 DEL_MATERIALS = {'Списать профиль': 'profile', 'Списать светодиодные модули': 'module', 'Списать драйвера': 'driver',
                  'Списать крышки': 'cover', 'Списать систему крепления': 'mounting_system'}
 
+CREATE_MATERIALS = {'Категория профиль': 'profile', 'Категория светодиодные модули': 'module', 'Категория драйвера': 'driver',
+                 'Категория крышки': 'cover', 'Категория система крепления': 'mounting_system'}
+
 def get_number_of_materials(material):
     """
     This function takes one parameter as input:

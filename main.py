@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 from telebot import types
 from get_material import *
-from materials import get_number_of_materials, MATERIALS, DEL_MATERIALS, ADD_MATERIALS
+from materials import get_number_of_materials, MATERIALS, DEL_MATERIALS, ADD_MATERIALS, CREATE_MATERIALS
 
 load_dotenv()
 
@@ -26,6 +26,7 @@ def start_message(message):
     markup.row(telebot.types.KeyboardButton('Добавить материал'))
     markup.row(telebot.types.KeyboardButton('Списать материал'))
     markup.row(telebot.types.KeyboardButton('Просмотр количества материала'))
+    markup.row(telebot.types.KeyboardButton('Создать новый матерал'))
     bot.send_message(message.chat.id, "Добро пожаловать в начальное меню", reply_markup=markup)
 
 
@@ -93,6 +94,19 @@ def del_material_get_value_material(message, data, chapter):
     bot.send_message(message.chat.id, f"Материал списан")
 
 
+def create_material_get_name_material(message, chapter):
+    data = message.text.upper()
+    inp = bot.send_message(message.chat.id, 'Теперь количество')
+    bot.register_next_step_handler(inp, create_material_get_value_material, data, chapter)
+
+
+def create_material_get_value_material(message, data, chapter):
+    url = f'http://127.0.0.1:9000/api/{chapter}/'
+    end_data = {chapter: data, 'value': int(message.text)}
+    response = requests.post(url, data=end_data)
+    bot.send_message(message.chat.id, f"Материал создан")
+
+
 @bot.message_handler(content_types=['text'])
 def handle_text(message):
     if message.text == 'Добавить материал':
@@ -105,7 +119,7 @@ def handle_text(message):
         button_6 = types.KeyboardButton('Назад в меню')
         markup.add(button_1, button_2, button_3, button_4, button_5, button_6)
         bot.send_message(message.chat.id,
-                         "Menu: \n1. Профиль \n2. Светодиодные модули \n3. Драйвера \n4. Крышки \n5. Крепления",
+                         "Выберите одну из опций",
                          reply_markup=markup)
     elif message.text in list(ADD_MATERIALS.keys()):
         chapter = ADD_MATERIALS[message.text]
@@ -160,6 +174,24 @@ def handle_text(message):
 
 
 
+
+    if message.text == 'Создать новый матерал':
+        markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
+        button_1 = telebot.types.KeyboardButton('Категория профиль')
+        button_2 = telebot.types.KeyboardButton('Категория светодиодные модули')
+        button_3 = telebot.types.KeyboardButton('Категория драйвера')
+        button_4 = telebot.types.KeyboardButton('Категория крышки')
+        button_5 = telebot.types.KeyboardButton('Категория система крепления')
+        button_6 = types.KeyboardButton('Назад в меню')
+        markup.add(button_1, button_2, button_3, button_4, button_5, button_6)
+        bot.send_message(message.chat.id,
+                         "Выбирайте категорию",
+                         reply_markup=markup)
+    elif message.text in list(CREATE_MATERIALS.keys()):
+        chapter = CREATE_MATERIALS[message.text]
+        bot.send_message(message.chat.id, "Пожалуйста, введите "
+                                        "наименование материала, которое хотите создать")
+        bot.register_next_step_handler(message, create_material_get_name_material, chapter)
 
 
 
