@@ -4,48 +4,34 @@ import requests
 import telebot
 from telebot import types
 
-from get_material import conversion_name
-from main import bot
+from get_material import conversion_name, log
+from main import bot, red
+from datetime import datetime
 
 MATERIALS = {'Профиль': 'profile', 'Светодиодные модули': 'module', 'Драйвера': 'driver', 'Крышки': 'cover',
              'Система крепления': 'mounting_system'}
 
-ADD_MATERIALS = {'Добавить профиль': 'profile', 'Добавить светодиодные модули': 'module', 'Добавить драйвера': 'driver',
+ADD_MATERIALS = {'Добавить профиль': 'profile', 'Добавить светодиодные модули': 'module',
+                 'Добавить драйвера': 'driver',
                  'Добавить крышки': 'cover', 'Добавить систему крепления': 'mounting_system'}
 
-DEL_MATERIALS = {'Списать профиль': 'profile', 'Списать светодиодные модули': 'module', 'Списать драйвера': 'driver',
+DEL_MATERIALS = {'Списать профиль': 'profile', 'Списать светодиодные модули': 'module',
+                 'Списать драйвера': 'driver',
                  'Списать крышки': 'cover', 'Списать систему крепления': 'mounting_system'}
 
-CREATE_MATERIALS = {'Категория профиль': 'profile', 'Категория светодиодные модули': 'module', 'Категория драйвера': 'driver',
+CREATE_MATERIALS = {'Категория профиль': 'profile', 'Категория светодиодные модули': 'module',
+                    'Категория драйвера': 'driver',
                  'Категория крышки': 'cover', 'Категория система крепления': 'mounting_system'}
-
-LAST_CHOICES_LAMP = {}
-
 
 
 def get_number_of_materials(material):
-    """
-    This function takes one parameter as input:
-    - material (str): The name of the material for which to retrieve the count.
-
-    The function makes a GET request to an API endpoint to retrieve data for the specified material. The function returns a
-    dictionary mapping the names of the materials to their corresponding count.
-    """
     response = requests.get(f'http://127.0.0.1:9000/api/{material}/')
     data = response.json()
-    dict_of_material = {item['profile']: item['id'] for item in data}
+    dict_of_material = {item[material]: item['id'] for item in data['results']}
     return dict_of_material
 
 
 def add_material_get_name_material(message, chapter, bot):
-    """
-    This function takes two parameters as input:
-    - message (object): The message object received from the chat API.
-    - chapter (object): The chapter object associated with the material being added.
-
-    The function prompts the user for the name of the material to be added. Once the name is received, the function calls
-    the add_material_get_value_material function to prompt the user for the quantity of the material.
-    """
     data = conversion_name(message.text)
     number_materials = get_number_of_materials(chapter)
     url = f'http://127.0.0.1:9000/api/{chapter}/{number_materials.get(data)}/'
@@ -57,41 +43,49 @@ def add_material_get_name_material(message, chapter, bot):
 
 
 def add_material_get_value_material(message, data, chapter, url):
-    """
-    This function takes three parameters as input:
-    - message (object): The message object received from the chat API.
-    - data (str): The name of the material to be added.
-    - chapter (object): The chapter object associated with the material being added.
-
-    The function retrieves the current number of materials for the specified chapter. It then makes a GET request to an API
-    endpoint to retrieve the current value of the material. The function adds the newly provided quantity to the current value
-    and updates the material count by making a PUT request to the API endpoint. Finally, the function sends a confirmation
-    message to the user indicating that the material has been added.
-    """
     previous_value_request = requests.get(url)
     last_value_json = previous_value_request.json()
     last_value = last_value_json['value']
-    end_data = {chapter: data, 'value': int(message.text)}
+    end_data = {chapter: data,
+                'value': int(message.text)}
     end_data['value'] = last_value + end_data['value']
     response = requests.put(url, data=end_data)
+    log_data = {'user': int(message.from_user.id),
+                'action': 'Добавлено',
+                'category': chapter,
+                'material': data,
+                'value': end_data['value']}
+    log(log_data)
     bot.send_message(message.chat.id, f"Материал добавлен")
+
 
 
 def del_material_get_name_material(message, chapter, bot):
     data = conversion_name(message.text)
-    inp = bot.send_message(message.chat.id, 'Теперь количество')
-    bot.register_next_step_handler(inp, del_material_get_value_material, data, chapter)
-
-
-def del_material_get_value_material(message, data, chapter):
     number_materials = get_number_of_materials(chapter)
     url = f'http://127.0.0.1:9000/api/{chapter}/{number_materials.get(data)}/'
+    if requests.get(url).status_code == 404:
+        retry_get_value(message, chapter, bot)
+    else:
+        inp = bot.send_message(message.chat.id, 'Теперь количество')
+        bot.register_next_step_handler(inp, del_material_get_value_material, data, chapter, url)
+
+
+def del_material_get_value_material(message, data, chapter, url):
     previous_value_request = requests.get(url)
     last_value_json = previous_value_request.json()
     last_value = last_value_json['value']
-    end_data = {chapter: data, 'value': int(message.text)}
+    end_data = {chapter: data,
+                'value': int(message.text)}
+    value = end_data['value']
     end_data['value'] = last_value - end_data['value']
     response = requests.put(url, data=end_data)
+    log_data = {'user': int(message.from_user.id),
+                'action': 'Списано',
+                'category': chapter,
+                'material': data,
+                'value': value}
+    log(log_data)
     bot.send_message(message.chat.id, f"Материал списан")
 
 
@@ -126,9 +120,9 @@ def get_name(message):
             bot.send_message(message.chat.id, 'Проверка прошла успешна')
             start_message(message.chat.id)
         else:
-            print('User does not exist or telegram_id does not match')
+            bot.send_message(message.chat.id, 'У вас нет доступа к этому боту')
     else:
-        print('Failed to check telegram_id')
+        bot.send.message(message.chat.id, 'Неправильные данные')
 
 def check_id_for_functionality(message):
     telegram_id = message.from_user.id
@@ -149,6 +143,7 @@ def start_message(message_chat_id):
     markup.row(telebot.types.KeyboardButton('Просмотр количества материала'))
     markup.row(telebot.types.KeyboardButton('Создать новый матерал'))
     markup.row(telebot.types.KeyboardButton('Проекты светильников'))
+    markup.row(telebot.types.KeyboardButton('История действий'))
     bot.send_message(message_chat_id, "Добро пожаловать в начальное меню", reply_markup=markup)
 
 
@@ -185,3 +180,61 @@ def delete_materials_lamp(message, data):
     else:
         bot.send_message(message.chat.id, 'Материалы светильника списаны')
 
+
+def formate_date(date):
+    date = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%fZ')
+    formatted_date = datetime.strftime(date, '%d.%m.%Y - %H.%M')
+    return formatted_date
+
+def get_history_log(message, data):
+    for history in data['results']:
+        response_name = requests.get(f'http://127.0.0.1:9000/get_username_by_telegram_id/{history["user"]}/')
+        name_user = response_name.json()
+        mess = f'Пользователь {name_user["username"]}: {history["action"]} {history["material"]} ' \
+               f'в количестве {history["value"]} шт. Дата: {formate_date(history["date_update"])}'
+        bot.send_message(message.chat.id, mess)
+    if data['next']:
+        next_page = json.dumps(data['next']).encode('utf8')
+        red.set('history_log_page', next_page)
+        markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
+        button_1 = telebot.types.KeyboardButton('Следующая страница истории действий')
+        button_2 = telebot.types.KeyboardButton('Назад в меню')
+        markup.add(button_1, button_2)
+        bot.send_message(message.chat.id,
+                         "_______________________",
+                         reply_markup=markup)
+    else:
+        markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
+        button_1 = telebot.types.KeyboardButton('Назад в меню')
+        markup.add(button_1)
+        bot.send_message(message.chat.id,
+                         "_______________________",
+                         reply_markup=markup)
+
+def history_log_next_page_use(message, next_page):
+    page_num = next_page.split('/')[-1]
+    response = requests.get(f'http://127.0.0.1:9000/api/history_log/{page_num}')
+    response_json = response.json()
+    for history in response_json['results']:
+        response_name = requests.get(f'http://127.0.0.1:9000/get_username_by_telegram_id/{history["user"]}/')
+        name_user = response_name.json()
+        mess = f'Пользователь {name_user["username"]}: {history["action"]} {history["material"]} ' \
+                   f'в количестве {history["value"]} шт. Дата: {formate_date(history["date_update"])}'
+        bot.send_message(message.chat.id, mess)
+    if response_json['next']:
+        next_page = json.dumps(response_json['next']).encode('utf8')
+        red.set('history_log_page', next_page)
+        markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
+        button_1 = telebot.types.KeyboardButton('Следующая страница истории действий')
+        button_2 = telebot.types.KeyboardButton('Назад в меню')
+        markup.add(button_1, button_2)
+        bot.send_message(message.chat.id,
+                             "_______________________",
+                             reply_markup=markup)
+    else:
+        markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
+        button_1 = telebot.types.KeyboardButton('Назад в меню')
+        markup.add(button_1)
+        bot.send_message(message.chat.id,
+                             "_______________________",
+                             reply_markup=markup)

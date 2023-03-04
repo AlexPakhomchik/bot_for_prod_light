@@ -25,7 +25,6 @@ def start_handler(message):
     bot.register_next_step_handler(message, get_name)
 
 
-
 @bot.message_handler(func=lambda message: message.text == 'Назад в меню')
 def handle_menu_button(message):
     start_message(message.chat.id)
@@ -50,8 +49,8 @@ def handle_text(message):
             chapter = ADD_MATERIALS[message.text]
             response = requests.get(f'http://127.0.0.1:9000/api/{ADD_MATERIALS[message.text]}/')
             data = response.json()
-            bot.send_message(message.chat.id, "Пожалуйста, введите "
-                                            "наименование и количество, которое хотите добавить")
+            bot.send_message(message.chat.id, "Количество материала на складе. Пожалуйста, введите "
+                                            "наименование, которое хотите добавить")
             bot.send_message(message.chat.id, get_all_materials(data, ADD_MATERIALS[message.text]))
             bot.register_next_step_handler(message, add_material_get_name_material, chapter, bot)
 
@@ -129,6 +128,20 @@ def handle_text(message):
             choice = red.get('last_choices_lamp')
             choice_decode = json.loads(choice.decode('utf-8'))
             delete_materials_lamp(message, choice_decode)
+
+        if message.text == 'История действий':
+            response = requests.get(f'http://127.0.0.1:9000/api/history_log/')
+            data = response.json()
+            get_history_log(message, data)
+
+
+
+        elif message.text == 'Следующая страница истории действий':
+            history_log_next_page = red.get('history_log_page')
+            history_log_data = json.loads(history_log_next_page.decode('utf-8'))
+            history_log_next_page_use(message, next_page=history_log_data)
+
+
     else:
         bot.send_message(message.chat.id, 'Доступ закрыт')
         return

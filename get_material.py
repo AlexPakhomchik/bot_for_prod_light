@@ -1,3 +1,6 @@
+import requests
+
+
 def get_all_materials(json_data, name_material):
     """
     This function takes two parameters as input:
@@ -18,4 +21,8 @@ def conversion_name(name):
     step_1 = name.split(' ')
     step_2 = list(filter(lambda x: x.strip(), step_1))
     return '_'.join(step_2).upper()
+
+
+def log(add_data_list_history):
+    response = requests.post('http://127.0.0.1:9000/api/history_log/', data=add_data_list_history)
 
