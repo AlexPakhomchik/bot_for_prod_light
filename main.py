@@ -11,7 +11,7 @@ from modules import *
 load_dotenv()
 
 red = redis.StrictRedis(
-    host='localhost',
+    host='redis',
     port=6379,
     password=''
 )
@@ -47,7 +47,7 @@ def handle_text(message):
                              reply_markup=markup)
         elif message.text in list(ADD_MATERIALS.keys()):
             chapter = ADD_MATERIALS[message.text]
-            response = requests.get(f'http://127.0.0.1:9000/api/{ADD_MATERIALS[message.text]}/')
+            response = requests.get(f'http://web:9000/api/{ADD_MATERIALS[message.text]}/')
             data = response.json()
             bot.send_message(message.chat.id, "Количество материала на складе. Пожалуйста, введите "
                                             "наименование, которое хотите добавить")
@@ -69,7 +69,7 @@ def handle_text(message):
                              reply_markup=markup)
         elif message.text in list(DEL_MATERIALS.keys()):
             chapter = DEL_MATERIALS[message.text]
-            response = requests.get(f'http://127.0.0.1:9000/api/{DEL_MATERIALS[message.text]}/')
+            response = requests.get(f'http://web:9000/api/{DEL_MATERIALS[message.text]}/')
             data = response.json()
             bot.send_message(message.chat.id, "Пожалуйста, введите наименование и количество, которое хотите"
                                               " списать")
@@ -92,7 +92,7 @@ def handle_text(message):
                     'Выбирайте категорию',
                     reply_markup=markup)
         elif message.text in list(MATERIALS.keys()):
-            response = requests.get(f'http://127.0.0.1:9000/api/{MATERIALS[message.text]}/')
+            response = requests.get(f'http://web:9000/api/{MATERIALS[message.text]}/')
             data = response.json()
             bot.send_message(message.chat.id, get_all_materials(data, MATERIALS[message.text]))
 
@@ -118,7 +118,7 @@ def handle_text(message):
             bot.register_next_step_handler(message, create_material_get_name_material, chapter, bot)
 
         if message.text == 'Проекты светильников':
-            send_lamp_page(message, 'http://127.0.0.1:9000/api/lamp/')
+            send_lamp_page(message, 'http://web:9000/api/lamp/')
             @bot.callback_query_handler(func=lambda call: call.data.startswith('next_page_'))
             def handle_next_page(call):
                 page_url = call.data.replace('next_page_', '')
@@ -130,7 +130,7 @@ def handle_text(message):
             delete_materials_lamp(message, choice_decode)
 
         if message.text == 'История действий':
-            response = requests.get(f'http://127.0.0.1:9000/api/history_log/')
+            response = requests.get(f'http://web:9000/api/history_log/')
             data = response.json()
             get_history_log(message, data)
 
@@ -151,7 +151,7 @@ def handle_text(message):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('lamp_'))
 def show_lamp_info(call):
     lamp_id = call.data.split('_')[1]
-    response = requests.get(f'http://127.0.0.1:9000/api/lamp/{lamp_id}')
+    response = requests.get(f'http://web:9000/api/lamp/{lamp_id}')
     lamp = response.json()
     last_choices_lamp = json.dumps(lamp).encode('utf8')
     red.set('last_choices_lamp', last_choices_lamp)

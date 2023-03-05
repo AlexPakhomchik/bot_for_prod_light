@@ -27,5 +27,5 @@ def conversion_name(name):
 
 def log(add_data_list_history):
     """This function sends a POST request to the server's history_log API endpoint with add_data_list_history data."""
-    response = requests.post('http://127.0.0.1:9000/api/history_log/', data=add_data_list_history)
+    response = requests.post('http://web:9000/api/history_log/', data=add_data_list_history)
 

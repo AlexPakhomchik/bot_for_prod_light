@@ -21,8 +21,8 @@ CREATE_MATERIALS = {'Категория профиль': 'profile', 'Катег�
                     'Категория драйвера': 'driver',
                     'Категория крышки': 'cover', 'Категория система крепления': 'mounting_system'}
 
-"""CRUD func for materials"""
 
+"""CRUD func for materials"""
 
 def add_material_get_name_material(message, chapter, bot):
     """Takes in a message, a chapter, and a bot object as input.
@@ -34,7 +34,7 @@ def add_material_get_name_material(message, chapter, bot):
     the add_material_get_value_material() function to handle the input."""
     data = conversion_name(message.text)
     number_materials = get_number_of_materials(chapter)
-    url = f'http://127.0.0.1:9000/api/{chapter}/{number_materials.get(data)}/'
+    url = f'http://web:9000/api/{chapter}/{number_materials.get(data)}/'
     if requests.get(url).status_code == 404:
         retry_get_value(message, chapter, bot)
     else:
@@ -75,9 +75,9 @@ def del_material_get_name_material(message, chapter, bot):
     the del_material_get_value_material() function to handle the input."""
     data = conversion_name(message.text)
     number_materials = get_number_of_materials(chapter)
-    url = f'http://127.0.0.1:9000/api/{chapter}/{number_materials.get(data)}/'
+    url = f'http://web:9000/api/{chapter}/{number_materials.get(data)}/'
     if requests.get(url).status_code == 404:
-        retry_get_value(message, chapter, bot)
+        retry_get_value_del(message, chapter, bot)
     else:
         inp = bot.send_message(message.chat.id, 'Теперь количество')
         bot.register_next_step_handler(inp, del_material_get_value_material, data, chapter, url)
@@ -125,7 +125,7 @@ def create_material_get_value_material(message, data, chapter):
     """Takes in a message, data, and chapter as input. It constructs a URL to make a POST request to
     the API endpoint with the formatted chapter and data input to create a new material with the given name and
     amount. Then, it sends a message to the user indicating that the material has been created """
-    url = f'http://127.0.0.1:9000/api/{chapter}/'
+    url = f'http://web:9000/api/{chapter}/'
     end_data = {chapter: data, 'value': int(message.text)}
     response = requests.post(url, data=end_data)
     bot.send_message(message.chat.id, f"Материал создан")
@@ -139,11 +139,19 @@ def retry_get_value(message, chapter, bot):
     bot.register_next_step_handler(message, add_material_get_name_material, chapter, bot)
 
 
+def retry_get_value_del(message, chapter, bot):
+    """Takes in a message, chapter, and bot as input. It sends a message to the user indicating that
+    the value input was incorrect and to try again. Then, it registers the next step handler to the
+    add_material_get_name_material function with the chapter and bot input. """
+    bot.send_message(message.chat.id, f"Неправильное значение, попробуйте еще раз")
+    bot.register_next_step_handler(message, del_material_get_name_material, chapter, bot)
+
+
 def get_number_of_materials(material):
     """Takes in a material name as input and sends a GET request to the API endpoint to retrieve a list
     of materials with the given name. It then extracts the ID and name of each material and stores it in a dictionary
     where the material name is the key and the ID is the value. The function returns the dictionary. """
-    response = requests.get(f'http://127.0.0.1:9000/api/{material}/')
+    response = requests.get(f'http://web:9000/api/{material}/')
     data = response.json()
     dict_of_material = {item[material]: item['id'] for item in data['results']}
     return dict_of_material
@@ -159,7 +167,7 @@ def get_name(message):
     that they do not have access to the bot."""
     username = message.text
     telegram_id = message.from_user.id
-    response = requests.get('http://127.0.0.1:9000/check_telegram_id/',
+    response = requests.get('http://web:9000/check_telegram_id/',
                             params={'username': username, 'telegram_id': telegram_id})
     if response.status_code == 200:
         data = response.json()
@@ -170,13 +178,13 @@ def get_name(message):
         else:
             bot.send_message(message.chat.id, 'У вас нет доступа к этому боту')
     else:
-        bot.send.message(message.chat.id, 'Неправильные данные')
+        bot.send_message(message.chat.id, 'Неправильные данные')
 
 
 def check_id_for_functionality(message):
     """Checks if the user has access to the bot based on telegram_id"""
     telegram_id = message.from_user.id
-    response = requests.get('http://127.0.0.1:9000/check_functionality/',
+    response = requests.get('http://web:9000/check_functionality/',
                             params={'telegram_id': telegram_id})
     if response.status_code != 200:
         bot.send_message(message.chat.id, 'Вы не можете пользоваться данным ботом')
@@ -245,7 +253,7 @@ def delete_materials_lamp(message, data):
                       'type_cover': {'cover': data['use_cover'], 'value': data['value_cover']},
                       'type_mounting_system': {'mounting_system': data['use_mounting_system'],
                                                'value': data['value_mounting_system']}}
-    url = f'http://127.0.0.1:9000/delete_materials_lamp/'
+    url = f'http://web:9000/delete_materials_lamp/'
     headers = {'Content-type': 'application/json'}
     response = requests.post(url, data=json.dumps(materials_lamp), headers=headers)
     if response.status_code == 400:
@@ -260,7 +268,7 @@ def get_history_log(message, data):
     If there are more pages of history to display, the function will also display a "next page" button to allow the
     user to view more history. """
     for history in data['results']:
-        response_name = requests.get(f'http://127.0.0.1:9000/get_username_by_telegram_id/{history["user"]}/')
+        response_name = requests.get(f'http://web:9000/get_username_by_telegram_id/{history["user"]}/')
         name_user = response_name.json()
         mess = f'Пользователь {name_user["username"]}: {history["action"]} {history["material"]} ' \
                f'в количестве {history["value"]} шт. Дата: {formate_date(history["date_update"])}'
@@ -294,10 +302,10 @@ def history_log_next_page_use(message, next_page):
 
     If the server response contains a next page URL, the URL is stored in Redis for later use and a new keyboard markup is created to allow the user to navigate to the next page or back to the main menu. If there is no next page, a different keyboard markup is created with only an option to go back to the main menu."""
     page_num = next_page.split('/')[-1]
-    response = requests.get(f'http://127.0.0.1:9000/api/history_log/{page_num}')
+    response = requests.get(f'http://web:9000/api/history_log/{page_num}')
     response_json = response.json()
     for history in response_json['results']:
-        response_name = requests.get(f'http://127.0.0.1:9000/get_username_by_telegram_id/{history["user"]}/')
+        response_name = requests.get(f'http://web:9000/get_username_by_telegram_id/{history["user"]}/')
         name_user = response_name.json()
         mess = f'Пользователь {name_user["username"]}: {history["action"]} {history["material"]} ' \
                f'в количестве {history["value"]} шт. Дата: {formate_date(history["date_update"])}'
